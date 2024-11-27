@@ -1,0 +1,13 @@
+# pycharm env
+.idea
+.run
+
+# python env
+.venv
+__pycache__
+
+# coverage
+.coverage
+
+/.env
+.DS_Store
