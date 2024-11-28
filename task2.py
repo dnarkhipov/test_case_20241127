@@ -63,7 +63,7 @@ def solve(n_days: int, m_lots_per_day: int, s_amount_total: int, lots: list[LotD
 
     for cost, income, lot in lots_data:
         max_budget_to_check = min(s_amount_total, max_used_budget + int(cost))  # Сокращаем область проверки
-        for j in range(s_amount_total, int(cost) - 1, -1):
+        for j in range(max_budget_to_check, int(cost) - 1, -1):
             if dp[j - int(cost)] + income > dp[j]:
                 # покупка текущего лота даёт лучший результат при бюджете j
                 dp[j] = dp[j - int(cost)] + income
