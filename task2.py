@@ -6,7 +6,6 @@
 from dataclasses import dataclass
 from decimal import Decimal
 
-
 NOMINAL = Decimal(1000)  # номинал одной облигации, уе
 COUPON = Decimal(1)  # стоимость одного купона, уе
 
@@ -53,23 +52,32 @@ def solve(n_days: int, m_lots_per_day: int, s_amount_total: int, lots: list[LotD
     :return: Итоговый максимальный доход, который можно получить при имеющемся бюджете s_amount_total,
             Список лотов, которые нужно купить для достижения этого дохода.
     """
-    # доходность по каждому лоту: total_cost, total_income, lot
-    lots_data = [(*calculate_lot_data(l, n_days), l) for l in lots]
+
+    # доходность по каждому лоту: total_cost, total_income, lot, исключаем заведомо недоступные для покупки
+    lots_data = [(*calculate_lot_data(l, n_days), l) for l in lots if
+                 calculate_lot_data(l, n_days)[0] <= s_amount_total]
 
     dp = [Decimal(0)] * (s_amount_total + 1)  # Максимальная прибыль для каждого бюджета
     lot_selection = [None] * (s_amount_total + 1)  # Список лотов для каждого бюджета
+    max_used_budget = 0  # Максимальный использованный бюджет
 
     for cost, income, lot in lots_data:
+        max_budget_to_check = min(s_amount_total, max_used_budget + int(cost))  # Сокращаем область проверки
         for j in range(s_amount_total, int(cost) - 1, -1):
             if dp[j - int(cost)] + income > dp[j]:
+                # покупка текущего лота даёт лучший результат при бюджете j
                 dp[j] = dp[j - int(cost)] + income
                 if lot_selection[j - int(cost)] is not None:
+                    # Добавляем текущий лот к уже выбранным лотам для бюджета j - cost
                     lot_selection[j] = lot_selection[j - int(cost)] + [lot]
                 else:
+                    # новый список для бюджета j - cost
                     lot_selection[j] = [lot]
+                max_used_budget = max(max_used_budget, j)  # Обновляем максимальный использованный бюджет
 
-    # Поиск лучшего бюджета
-    max_budget = max(range(s_amount_total + 1), key=lambda x: dp[x])
+    # поиск лучшего бюджета
+    max_budget = max(range(max_used_budget + 1),
+                     key=lambda x: dp[x])  # бюджет x, для которого значение dp[x] максимально
     selected_lots = lot_selection[max_budget] if lot_selection[max_budget] else []
 
     return dp[max_budget], selected_lots
